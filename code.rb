@@ -2,7 +2,7 @@ require 'json'
 
 class Hangman
     def word_forming
-        words = File.read("google-10000-english-no-swears.txt").split
+        words = File.read('google-10000-english-no-swears.txt').split
         @intact_guess_word = words[rand(1..9893)]
         until @intact_guess_word.length >= 5 && @intact_guess_word.length <= 12
             @intact_guess_word = words[rand(1..9893)]
@@ -22,7 +22,7 @@ class Hangman
             guess_word: @guess_word,
             mistakes: @mistakes
         }
-        File.open("data.json", "w") do |file|
+        File.open('data.json', 'w') do |file|
             JSON.dump(data, file)
         end
     end
@@ -34,22 +34,34 @@ class Hangman
         @hidden_word = save_data['hidden_word']
         @guess_word = save_data['guess_word']
         @mistakes = save_data['mistakes']
-        
     end
     
     def play
-        alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+        if File.exist?('/mnt/c/Users/const/downloads/repos/Hangman/data.json')
+            puts "If you want to load previous save data, write '1', else write '0'"
+            input = gets.chomp
+            print "\r" + ("\e[A\e[K"*1)
+            until input == '1' || input == '0'
+                puts 'Write either 1 or 0'
+                input = gets.chomp
+                print "\r" + ("\e[A\e[K"*2)
+            end
+            print "\r" + ("\e[A\e[K"*1)
+            self.use_save_data if input == '1'
+        end
 
-        puts @intact_guess_word
-        puts "Introduce a letter until you complete the word, you are allowed only 6 mistakes"
+        puts 'Introduce a letter until you complete the word, you are allowed only 6 mistakes'
+        puts "If you want to save, write 'save' " 
         puts "---------------------------------------------------------------------------------------------- \n\n"
         puts "      Mistakes: #{@mistakes}\n\n"
         puts "      #{@hidden_word.join('')}\n\n"
-        puts "----------------------------------------------------------------------------------------------"
+        puts '----------------------------------------------------------------------------------------------'
+
+        alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
         until @mistakes == 6 || @hidden_word.include?('_') == false
             input_letter = gets.chomp.downcase
-            until alphabet.include?(input_letter)
+            until alphabet.include?(input_letter) || input_letter == 'save'
                 puts 'Introduce a letter!'
                 input_letter = gets.chomp.downcase
                 print "\r" + ("\e[A\e[K"*2)
@@ -62,22 +74,21 @@ class Hangman
                         break
                     end
                 end
+            elsif input_letter == 'save'
+                self.save_data
             else
                 @mistakes +=1
             end
             print "\r" + ("\e[A\e[K"*6)
             puts "      Mistakes: #{@mistakes}\n\n"
             puts "      #{@hidden_word.join('')}\n\n"
-            puts "----------------------------------------------------------------------------------------------"
+            puts '----------------------------------------------------------------------------------------------'
         end
-
         puts ''
-        puts "The word is #{@intact_guess_word}"
+        puts "Guess word: '#{@intact_guess_word}'"
     end
 end
 
 new_game = Hangman.new
 new_game.word_forming
-new_game.save_data
-new_game.use_save_data
 new_game.play
